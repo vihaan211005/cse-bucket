@@ -1,0 +1,20 @@
+module data_memory (
+    input clk,
+    input mem_write,
+    input [31:0] addr,
+    input [31:0] write_data,
+    output [31:0] read_data
+);
+
+  wire [7:0] word_addr = addr[9:2];
+
+  dist_mem_gen_data data_mem (
+      .a   (word_addr),
+      .d   (write_data),
+      .dpra(8'b0),
+      .clk (clk),
+      .we  (mem_write),
+      .dpo (read_data)
+  );
+
+endmodule
