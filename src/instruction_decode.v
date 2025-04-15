@@ -35,6 +35,14 @@ module instruction_decode (
                 aluOp=4'b0000;
                 immReg=1'b0;
             end
+            6'h21: begin
+                regwrite = 1'b1;
+                memread = 1'b0;
+                memwrite = 1'b0;
+                aluOp=4'b0000; // Same ALU operation as add, but unsigned
+                immReg=1'b0;
+                $display("Performing addu for reg %d and reg %d to reg %d", rs, rt, rd);
+            end
             6'h22: begin
                 regwrite = 1'b1;
                 memread = 1'b0;
@@ -58,6 +66,22 @@ module instruction_decode (
         aluOp=4'b0000;
         immReg=1'b1;
         $display("Performing addi for reg %d, %d to reg %d", rs, imm, rt);
+    end
+    6'h23: begin // load word
+        regwrite = 1'b1;
+        memread = 1'b1;
+        memwrite = 1'b0;
+        aluOp=4'b0000;
+        immReg=1'b1;
+        $display("Performing lw for reg %d, %d to reg %d", rs, imm, rd);
+    end
+    6'h2B: begin // store word
+        regwrite = 1'b0;
+        memread = 1'b0;
+        memwrite = 1'b1;
+        aluOp=4'b0000;
+        immReg=1'b1;
+        $display("Performing sw for reg %d, %d to mem[reg %d + %d]", rd, rs, imm);
     end
     endcase
   end
