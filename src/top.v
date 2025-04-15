@@ -45,20 +45,28 @@ module program_counter(
         pc_out = 32'd0;
     end
     
-    always @(posedge clk) begin
-        pc_out <= pc_in;
+    always @(posedge clk or posedge rst) begin
+        if(rst) begin
+            pc_out <= 32'd0; 
+        end else begin
+            pc_out <= pc_in;
+        end
+            
     end
 endmodule
 
 module top(
-    input clk
+    input clk,
+    input rst,
+    output [31:0] outwire 
  );
     wire [31:0] dummy_wire;
     wire [31:0] PC_out;
     wire [31:0] PC_in;
+    assign PC_in = 32'd0;
     program_counter pc(
         .clk(clk),
-        .rst(1'b0),
+        .rst(rst),
         .pc_in(PC_in),
         .pc_out(PC_out)
     );
@@ -143,6 +151,8 @@ module top(
     );
     assign write_data = (memread) ? data_memory_output : alu_data_result; // choose between ALU result and memory data
     assign dummy_wire = 32'd0;
+    assign outwire = write_data;
+    
 
 
 
