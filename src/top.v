@@ -92,6 +92,7 @@ module top(
     wire memread;
     wire [3:0] aluOp;
     wire immReg;
+    wire regDst;
 
     instruction_decode control(
         .instruction(instruction),
@@ -107,8 +108,10 @@ module top(
         .memwrite(memwrite),
         .memread(memread),
         .aluOp(aluOp),
-        .immReg(immReg)
-    );    
+        .immReg(immReg),
+        .regDst(regDst)
+    );
+    wire [4:0] write_reg = (regDst) ? rd : rt; // choose the destination register based on regDst signal
     wire [31:0] reg_rs;
     wire [31:0] reg_rt;
     wire [31:0] write_data;
@@ -117,7 +120,7 @@ module top(
         .clk(clk),
         .rs(rs),
         .rt(rt),
-        .rd(rd),
+        .rd(write_reg),
         .write_data(write_data),
         .reg_rs(reg_rs),
         .reg_rt(reg_rt),
@@ -166,65 +169,8 @@ module top(
         .zero(zero_pc_increment)
     );
 
-
-    // alu branch_addr(
-    //     .a(PC_out),
-    //     .b(immediate_extended),
-    //     .alu_op(4'b0000),
-    //     .result(PC_in),
-    //     .zero(zero_pc_increment)
-    // );
-
-
-
-
-
-
-    
-
-
-
-    
-
-
 endmodule
 
-//module instruction_decode_testbench();
-//    wire [31:0] instruction;
-//    wire [ 5:0] opcode;
-//    wire [25:0] adr;
-//    wire [ 4:0] rs;
-//    wire [ 4:0] rt;
-//    wire [ 4:0] rd;
-//    wire [ 4:0] shamt;
-//    wire [ 5:0] funct;
-//    wire [15:0] imm;
-//    wire regwrite;
-//    wire memwrite;
-//    wire memread;
-//    wire [3:0] aluOp;
-//    wire immReg;
-//    instruction_decode control(
-//        .instruction(instruction),
-//        .opcode(opcode),
-//        .adr(adr),
-//        .rs(rs),
-//        .rt(rt),
-//        .rd(rd),
-//        .shamt(shamt),
-//        .funct(funct),
-//        .imm(imm),
-//        .regwrite(regwrite),
-//        .memwrite(memwrite),
-//        .memread(memread),
-//        .aluOp(aluOp),
-//        .immReg(immReg)
-//    );    
-//    assign instruction = 32'b
-//    initial begin
-        
-//    end
-//endmodule
 
 module top_testbench();
     // Clock generation
@@ -248,17 +194,8 @@ module top_testbench();
         $monitor("Immediate extension, %d, %b", $time, dut.immediate_extended, dut.immReg);
         // Monitor for a few clock cycles
         #100;
-//        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
-        
         #100;
-//        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
-//        $display("Opcode: %b, RS: %b, RT: %b, RD: %b", dut.opcode, dut.rs, dut.rt, dut.rd);
-        
         #100;
-//        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
-//        $display("Opcode: %b, RS: %b, RT: %b, RD: %b", dut.opcode, dut.rs, dut.rt, dut.rd);
-//        $display("RegWrite: %b, MemWrite: %b, MemRead: %b, ALU Op: %b", 
-//                dut.regwrite, dut.memwrite, dut.memread, dut.aluOp);
         
         // End simulation after some time
 //        #200;
@@ -272,85 +209,6 @@ module top_testbench();
         $dumpvars(0, top_testbench);
     end
 endmodule
-module instruction_decode_testbench();
-    // Inputs
-    reg [31:0] instruction;
-    
-    // Outputs
-    wire [5:0] opcode;
-    wire [25:0] adr;
-    wire [4:0] rs;
-    wire [4:0] rt;
-    wire [4:0] rd;
-    wire [4:0] shamt;
-    wire [5:0] funct;
-    wire [15:0] imm;
-    wire regwrite;
-    wire memwrite;
-    wire memread;
-    wire [3:0] aluOp;
-    wire immReg;
-    
-    // Instantiate the instruction_decode module
-    instruction_decode uut (
-        .instruction(instruction),
-        .opcode(opcode),
-        .adr(adr),
-        .rs(rs),
-        .rt(rt),
-        .rd(rd),
-        .shamt(shamt),
-        .funct(funct),
-        .imm(imm),
-        .regwrite(regwrite),
-        .memwrite(memwrite),
-        .memread(memread),
-        .aluOp(aluOp),
-        .immReg(immReg)
-    );
-    
-    // Test stimulus
-    initial begin
-        // Initialize inputs
-        instruction = 32'b0;
-        
-        // Wait for global reset
-        #100;
-        
-        // Apply test vector
-        instruction = 32'b000000010100101101100100010;
-        
-        // Display the outputs
-        #10;
-        $display("Time: %t", $time);
-        $display("Instruction: %b", instruction);
-        $display("Opcode: %b", opcode);
-        $display("Address: %b", adr);
-        $display("RS: %b", rs);
-        $display("RT: %b", rt);
-        $display("RD: %b", rd);
-        $display("Shamt: %b", shamt);
-        $display("Funct: %b", funct);
-        $display("Immediate: %b", imm);
-        $display("RegWrite: %b", regwrite);
-        $display("MemWrite: %b", memwrite);
-        $display("MemRead: %b", memread);
-        $display("ALU Op: %b", aluOp);
-        $display("Immediate Register: %b", immReg);
-        
-        // End simulation after some time
-        #100;
-        $finish;
-    end
-    
-    // Optional: Add waveform dumping
-    initial begin
-        $dumpfile("instruction_decode_testbench.vcd");
-        $dumpvars(0, instruction_decode_testbench);
-    end
-endmodule
-
-
 //module top_testbench()
 
 
