@@ -6,7 +6,7 @@ module instruction_fetch (
 
   wire [7:0] addr = pc[9:2];
 
-  dist_mem_gen_instr instruction_mem (
+  dist_mem_gen_0 instruction_mem (
       .a   (addr),
       .d   (32'b0),
       .dpra(addr),

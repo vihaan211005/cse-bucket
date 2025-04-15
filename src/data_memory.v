@@ -8,7 +8,7 @@ module data_memory (
 
   wire [7:0] word_addr = addr[9:2];
 
-  dist_mem_gen_data data_mem (
+  dist_mem_gen_0 data_mem (
       .a   (word_addr),
       .d   (write_data),
       .dpra(word_addr),

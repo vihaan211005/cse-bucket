@@ -53,7 +53,7 @@ endmodule
 module top(
     input clk
  );
-    
+    wire [31:0] dummy_wire;
     wire [31:0] PC_out;
     wire [31:0] PC_in;
     program_counter pc(
@@ -141,9 +141,8 @@ module top(
         .write_data(reg_rt),
         .read_data(data_memory_output)
     );
-
     assign write_data = (memread) ? data_memory_output : alu_data_result; // choose between ALU result and memory data
-
+    assign dummy_wire = 32'd0;
 
 
 
@@ -189,7 +188,18 @@ endmodule
 //    end
 //endmodule
 
-
+module top_testbench();
+    reg clk;
+    
+    top processor(
+        .clk(clk)
+    );
+    initial begin
+        clk = 1'b0;
+    end
+    always #20 clk=~clk;
+    
+endmodule
 module instruction_decode_testbench();
     // Inputs
     reg [31:0] instruction;
