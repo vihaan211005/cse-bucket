@@ -88,6 +88,7 @@ module adder (
 );
   always @(*) begin
     result = a + b;
+    $display("Adding %d, %d to result: %d", a, b, result);
   end
 endmodule
 

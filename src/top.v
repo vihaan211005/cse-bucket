@@ -50,6 +50,7 @@ module program_counter(
             pc_out <= 32'd0; 
         end else begin
             pc_out <= pc_in;
+            $display("Updating pc out to %d", pc_out);
         end
             
     end
@@ -130,6 +131,8 @@ module top(
     wire [31:0] immediate_extended = {{16{imm[15]}}, imm}; // sign-extend the immediate value
     assign alu_data_in1 = reg_rs; // first operand for ALU
     assign alu_data_in2 = (immReg) ? immediate_extended : reg_rt; // second operand for ALU
+    
+    
 
     wire zero;
 
@@ -162,8 +165,6 @@ module top(
         .result(PC_in),
         .zero(zero_pc_increment)
     );
-
-
 
 
     // alu branch_addr(
@@ -244,23 +245,23 @@ module top_testbench();
     initial begin
         // Initialize simulation
         $display("Starting simulation of the top module");
-        
+        $monitor("Immediate extension, %d, %b", $time, dut.immediate_extended, dut.immReg);
         // Monitor for a few clock cycles
         #100;
-        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
+//        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
         
         #100;
-        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
-        $display("Opcode: %b, RS: %b, RT: %b, RD: %b", dut.opcode, dut.rs, dut.rt, dut.rd);
+//        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
+//        $display("Opcode: %b, RS: %b, RT: %b, RD: %b", dut.opcode, dut.rs, dut.rt, dut.rd);
         
         #100;
-        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
-        $display("Opcode: %b, RS: %b, RT: %b, RD: %b", dut.opcode, dut.rs, dut.rt, dut.rd);
-        $display("RegWrite: %b, MemWrite: %b, MemRead: %b, ALU Op: %b", 
-                dut.regwrite, dut.memwrite, dut.memread, dut.aluOp);
+//        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
+//        $display("Opcode: %b, RS: %b, RT: %b, RD: %b", dut.opcode, dut.rs, dut.rt, dut.rd);
+//        $display("RegWrite: %b, MemWrite: %b, MemRead: %b, ALU Op: %b", 
+//                dut.regwrite, dut.memwrite, dut.memread, dut.aluOp);
         
         // End simulation after some time
-        #200;
+//        #200;
         $display("Simulation completed");
         $finish;
     end

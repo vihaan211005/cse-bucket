@@ -24,28 +24,40 @@ module instruction_decode (
   assign imm = instruction[15:0];  // I
   
   always @(*) begin
+    $display("Got instruction %b", instruction);
     case (opcode)
-    6'b0000: begin
+    6'b0000: begin      
         case (funct)
             6'h20: begin
                 regwrite = 1'b1;
                 memread = 1'b0;
                 memwrite = 1'b0;
                 aluOp=4'b0000;
+                immReg=1'b0;
             end
             6'h22: begin
                 regwrite = 1'b1;
                 memread = 1'b0;
                 memwrite = 1'b0;
                 aluOp=4'b0001;
+                immReg=1'b0;
             end
             6'h24: begin
                 regwrite = 1'b1;
                 memread = 1'b0;
                 memwrite = 1'b0;
                 aluOp=4'b0010;
+                immReg=1'b0;
             end
         endcase
+    end
+    6'h8: begin
+        regwrite = 1'b1;
+        memread = 1'b0;
+        memwrite = 1'b0;
+        aluOp=4'b0000;
+        immReg=1'b1;
+        $display("Performing addi for reg %d, %d to reg %d", rs, imm, rt);
     end
     endcase
   end

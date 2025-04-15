@@ -17,7 +17,12 @@ module reg_file (
   end
   assign reg_rs = regs[rs];
   assign reg_rt = regs[rt];
-  always @(posedge clk) if (reg_write) regs[rd] <= write_data;
+  always @(posedge clk) begin 
+    if (reg_write) begin
+        $display("Writing data %d to reg number %d which had %d", write_data, rd, regs[rd]);
+        regs[rd] <= write_data;
+    end
+  end
 endmodule
 
 module reg_file_float (
