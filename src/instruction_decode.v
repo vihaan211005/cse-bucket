@@ -17,8 +17,8 @@ module instruction_decode (
   assign opcode = instruction[31:26];  // R, I, J
   assign adr = instruction[25:0];  // J
   assign rs = instruction[25:21];  // R, I
-  assign rt = instruction[20:16];  // R, I
-  assign rd = instruction[15:11];  // R
+  assign rd = instruction[20:16];  // R, I
+  assign rt = instruction[15:11];  // R
   assign shamt = instruction[10:6];  // R
   assign funct = instruction[5:0];  // R
   assign imm = instruction[15:0];  // I
