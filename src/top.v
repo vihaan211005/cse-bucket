@@ -63,7 +63,7 @@ module top(
     wire [31:0] dummy_wire;
     wire [31:0] PC_out;
     wire [31:0] PC_in;
-    assign PC_in = 32'd0;
+    // assign PC_in = 32'd0;
     program_counter pc(
         .clk(clk),
         .rst(rst),
@@ -152,6 +152,33 @@ module top(
     assign write_data = (memread) ? data_memory_output : alu_data_result; // choose between ALU result and memory data
     assign dummy_wire = 32'd0;
     assign outwire = write_data;
+
+    wire zero_pc_increment;
+
+    alu pc_increment(
+        .a(PC_out),
+        .b(32'd4),
+        .alu_op(4'b0000),
+        .result(PC_in),
+        .zero(zero_pc_increment)
+    );
+
+
+
+
+    // alu branch_addr(
+    //     .a(PC_out),
+    //     .b(immediate_extended),
+    //     .alu_op(4'b0000),
+    //     .result(PC_in),
+    //     .zero(zero_pc_increment)
+    // );
+
+
+
+
+
+
     
 
 
