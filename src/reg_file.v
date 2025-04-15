@@ -9,6 +9,12 @@ module reg_file (
     input reg_write
 );
   reg [31:0] regs[0:31];
+  integer i;
+  initial begin
+    for (i = 0; i < 32; i = i + 1) begin
+      regs[i] = 32'b0;
+    end
+  end
   assign reg_rs = regs[rs];
   assign reg_rt = regs[rt];
   always @(posedge clk) if (reg_write) regs[rd] <= write_data;
