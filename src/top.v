@@ -189,16 +189,50 @@ endmodule
 //endmodule
 
 module top_testbench();
+    // Clock generation
     reg clk;
     
-    top processor(
+    // Instantiate the top module
+    top dut(
         .clk(clk)
     );
-    initial begin
-        clk = 1'b0;
-    end
-    always #20 clk=~clk;
     
+    // Clock generation (50MHz)
+    initial begin
+        clk = 0;
+        forever #10 clk = ~clk; // Toggle every 10ns (20ns period)
+    end
+    
+    // Test stimulus and monitoring
+    initial begin
+        // Initialize simulation
+        $display("Starting simulation of the top module");
+        
+        // Monitor for a few clock cycles
+        #100;
+        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
+        
+        #100;
+        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
+        $display("Opcode: %b, RS: %b, RT: %b, RD: %b", dut.opcode, dut.rs, dut.rt, dut.rd);
+        
+        #100;
+        $display("Time: %t, PC: %d, Instruction: %b", $time, dut.PC_out, dut.instruction);
+        $display("Opcode: %b, RS: %b, RT: %b, RD: %b", dut.opcode, dut.rs, dut.rt, dut.rd);
+        $display("RegWrite: %b, MemWrite: %b, MemRead: %b, ALU Op: %b", 
+                dut.regwrite, dut.memwrite, dut.memread, dut.aluOp);
+        
+        // End simulation after some time
+        #200;
+        $display("Simulation completed");
+        $finish;
+    end
+    
+    // Optional: Add waveform dumping
+    initial begin
+        $dumpfile("top_testbench.vcd");
+        $dumpvars(0, top_testbench);
+    end
 endmodule
 module instruction_decode_testbench();
     // Inputs
