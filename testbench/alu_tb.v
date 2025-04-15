@@ -53,6 +53,33 @@ module alu_tb;
     // INVALID OP
     test_case(32'd42, 32'd24, 4'b1111, "Invalid op: should return 0");
 
+    // MULTIPLY
+    test_case(32'h40200000, 32'h40800000, 4'b0101, "2.5 * 4.0");
+    test_case(32'h00000000, 32'h3f800000, 4'b0101, "0 * 1");
+    test_case(32'hbf800000, 32'h3f800000, 4'b0101, "-1 * 1");
+    test_case(32'h7f800000, 32'h3f800000, 4'b0101, "inf * 1");
+    test_case(32'hff800000, 32'h3f800000, 4'b0101, "-inf * 1");
+    test_case(32'h7fc00000, 32'h3f800000, 4'b0101, "NaN * 1");
+
+    // FLOOR
+    test_case(32'h40bc0000, 32'h00000000, 4'b0110, "floor(5.875)");
+    test_case(32'hbf99999a, 32'h00000000, 4'b0110, "floor(-1.2)");
+    test_case(32'h3f000000, 32'h00000000, 4'b0110, "floor(0.5)");
+    test_case(32'h80000000, 32'h00000000, 4'b0110, "floor(-0.0)");
+    test_case(32'h7f800000, 32'h00000000, 4'b0110, "floor(inf)");
+    test_case(32'h7fc00000, 32'h00000000, 4'b0110, "floor(NaN)");
+
+    // FLOOR TO INT
+    test_case(32'h406ccccd, 32'h00000000, 4'b0111, "floor_to_int(3.7)");
+    test_case(32'hbe99999a, 32'h00000000, 4'b0111, "floor_to_int(-0.3)");
+    test_case(32'hc1a00000, 32'h00000000, 4'b0111, "floor_to_int(-20.0)");
+    test_case(32'h3e4ccccd, 32'h00000000, 4'b0111, "floor_to_int(0.2)");
+
+    // FLOAT COMPARE
+    test_case(32'h40400000, 32'h40800000, 4'b1000, "compare(3.0, 4.0)");
+    test_case(32'h40a00000, 32'h40800000, 4'b1000, "compare(5.0, 4.0)");
+    test_case(32'h3f800000, 32'h3f800000, 4'b1000, "compare(1.0, 1.0)");
+
     $finish;
   end
 endmodule
