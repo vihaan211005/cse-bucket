@@ -15,7 +15,10 @@ module instruction_decode (
     output reg immReg,
     output reg regDst,
     output reg jump,
-    output reg branch
+    output reg branch,
+    output reg float_only,
+    output reg float_int
+
 );
   assign opcode = instruction[31:26];  // R, I, J
   assign adr = instruction[25:0];  // J
@@ -38,6 +41,8 @@ module instruction_decode (
     aluOp = 4'b0000;
     immReg = 1'b0;
     regDst = 1'b0;
+    float_only = 1'b0;
+    float_int = 1'b0;
     
     case (opcode)
     6'b000000: begin      
@@ -91,6 +96,7 @@ module instruction_decode (
                 regDst = 1'b1;
                 $display("Performing srl for reg %d by %d to reg %d", rt, shamt, rd);
             end
+            
             default: begin
                 $display("Unknown R-type instruction with function code: %h", funct);
             end
@@ -168,6 +174,44 @@ module instruction_decode (
         jump = 1'b1;
         $display("Performing jump and link to address %d", adr);
     end
+    6'b010001: begin // floating point operations
+        float_only = 1'b1;
+        case (rs)
+            5'b10000: begin
+                case (funct)
+                    // 6'h00: begin // float add
+                    //     regwrite = 1'b1;
+                    //     aluOp = 4'b0000; // add
+                    //     immReg = 1'b0;
+                    //     regDst = 1'b1;
+                    //     $display("Performing floating add for reg %d and reg %d to reg %d", rs, rt, rd);
+                    // end
+                    // 6'h01: begin // float sub
+                    //     regwrite = 1'b1;
+                    //     aluOp = 4'b0001; // sub
+                    //     immReg = 1'b0;
+                    //     regDst = 1'b1;
+                    //     $display("Performing floating sub for reg %d and reg %d to reg %d", rs, rt, rd);
+                    // end
+                    6'h02: begin // float mul
+                        regwrite = 1'b1;
+                        aluOp = 4'b0101; // mul
+                        immReg = 1'b0;
+                        regDst = 1'b1;
+                        float_int = 1'b0; // Indicate that this is a floating point operation
+                        $display("Performing floating mul for reg %d and reg %d to reg %d", rs, rt, rd);
+                    end
+            end
+            5'b00100: begin // move int to float
+                regwrite = 1'b1;
+                aluOp = 4'b1010;
+                immReg = 1'b0;
+                regDst = 1'b1;
+                float_int = 1'b1; // since it's for moving
+                $display("Performing move int to float for reg %d and reg %d to reg %d", rs, rt, rd);
+            end
+    end
+
     default: begin
         $display("Unknown opcode: %b", opcode);
     end

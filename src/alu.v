@@ -39,6 +39,7 @@ module alu (
 
   wire [31:0] float_mult_result;
   wire [31:0] floor_result;
+  wire [31:0] int_to_float_unit_result;
   wire [31:0] floor_to_int_result;
   wire [1:0] float_compare_result;
   wire [1:0] int_compare_result;
@@ -71,6 +72,11 @@ module alu (
       .result(int_compare_result)
   );
 
+  int_to_float_unit int_to_float (
+      .a(a),
+      .result(int_to_float_unit_result)
+  );
+
   always @(*) begin
     case (alu_op)
       4'b0000: result = add_result;
@@ -82,11 +88,8 @@ module alu (
       4'b0110:  result = floor_result;
       4'b0111:  result = floor_to_int_result;
       4'b1000:  result = {30'b0, float_compare_result};
-      4'b1001: begin
-        result = {30'b0, int_compare_result};
-//        zero = (result == 0) ? 1'b1 : 1'b0;  
-//        $display("Int comparision of %d %d done with result %b", a, b, zero);
-      end
+      4'b1001: result = {30'b0, int_compare_result};
+      4'b1010: result = int_to_float_unit_result;
       default: result = 0;
     endcase
     zero = (result == 0) ? 1'b1 : 1'b0;
@@ -244,6 +247,61 @@ module floor_to_int_unit (
             end
 
             result = int_part;
+        end
+    end
+endmodule
+
+module int_to_float_unit (
+    input [31:0] a,
+    output reg [31:0] result
+);
+    wire sign = a[31];
+    reg [31:0] abs_value;
+    reg [7:0] exponent;
+    reg [22:0] mantissa;
+    integer leading_zeros;
+    integer shift;
+    
+    always @(*) begin
+        // Handle zero input
+        if (a == 32'd0) begin
+            result = 32'h00000000;
+        end 
+        // Handle special case for most negative integer (-2^31)
+        else if (a == 32'h80000000) begin
+            result = 32'hCF000000; // -2^31 in float
+        end 
+        else begin
+            abs_value = sign ? (~a + 1) : a;
+
+            leading_zeros = 0;
+            if (abs_value[31:16] == 0) begin
+                leading_zeros = leading_zeros + 16;
+                abs_value = abs_value << 16;
+            end
+            if (abs_value[31:24] == 0) begin
+                leading_zeros = leading_zeros + 8;
+                abs_value = abs_value << 8;
+            end
+            if (abs_value[31:28] == 0) begin
+                leading_zeros = leading_zeros + 4;
+                abs_value = abs_value << 4;
+            end
+            if (abs_value[31:30] == 0) begin
+                leading_zeros = leading_zeros + 2;
+                abs_value = abs_value << 2;
+            end
+            if (abs_value[31] == 0) begin
+                leading_zeros = leading_zeros + 1;
+            end
+            shift = 31 - leading_zeros;
+            exponent = 127 + shift;
+            if (shift <= 23) begin
+                mantissa = (abs_value << (leading_zeros + 1)) >> (32 - 23);
+            end else begin
+                mantissa = (abs_value >> (shift - 23));
+            end
+            result = {sign, exponent, mantissa};
         end
     end
 endmodule

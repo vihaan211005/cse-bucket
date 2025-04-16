@@ -96,6 +96,8 @@ module top(
     wire regDst;
     wire jump;
     wire branch;
+    wire float_only;
+    wire float_int;
 
     instruction_decode control(
         .instruction(instruction),
@@ -115,6 +117,8 @@ module top(
         .aluOp(aluOp),
         .immReg(immReg),
         .regDst(regDst)
+        .float_only(float_only),
+        .float_int(float_int)
     );
     
     // Special handling for JAL instruction
@@ -146,6 +150,25 @@ module top(
         .reg_write(regwrite)
     );
 
+    wire [31:0] reg_rs_float;
+    wire [31:0] reg_rt_float;
+
+    reg_file rf_float(
+        .clk(clk),
+        .rs(rs),
+        .rt(rt),
+        .rd(write_reg),
+        .write_data(write_data),
+        .reg_rs(reg_rs_float),
+        .reg_rt(reg_rt_float),
+        .reg_write(regwrite)
+    );
+
+    
+
+    
+
+
     // Handle different instruction types and their special cases
     wire [31:0] alu_data_in1; // for the ALU giving data to memory or registers
     wire [31:0] alu_data_in2;
@@ -171,11 +194,16 @@ module top(
     assign alu_data_in1 = (is_shift) ? reg_rt : reg_rs; // For shifts, use rt as first operand
     assign alu_data_in2 = (is_shift) ? shamt_extended : 
                           (immReg) ? immediate_selected : reg_rt;
+
+    wire [31:0] alu_data_in1_final = (float_only) ? reg_rs_float : alu_data_in1;
+    wire [31:0] alu_data_in2_final = (float_only) ? reg_rt_float : alu_data_in2;
+    
+
     
     wire zero;
     alu alu_data(
-        .a(alu_data_in1),
-        .b(alu_data_in2),
+        .a(alu_data_in1_final),
+        .b(alu_data_in2_final),
         .alu_op(aluOp),
         .result(alu_data_result),
         .zero(zero)
