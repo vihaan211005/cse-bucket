@@ -64,11 +64,12 @@ module top(
     wire [31:0] dummy_wire;
     wire [31:0] PC_out;
     wire [31:0] PC_in;
+    wire [31:0] PC_final;
     // assign PC_in = 32'd0;
     program_counter pc(
         .clk(clk),
         .rst(rst),
-        .pc_in(PC_in),
+        .pc_in(PC_final),
         .pc_out(PC_out)
     );
     wire [31:0] instruction;
@@ -93,6 +94,8 @@ module top(
     wire [3:0] aluOp;
     wire immReg;
     wire regDst;
+    wire jump;
+    wire branch;
 
     instruction_decode control(
         .instruction(instruction),
@@ -105,6 +108,8 @@ module top(
         .funct(funct),
         .imm(imm),
         .regwrite(regwrite),
+        .branch(branch),
+        .jump(jump),
         .memwrite(memwrite),
         .memread(memread),
         .aluOp(aluOp),
@@ -115,6 +120,18 @@ module top(
     wire [31:0] reg_rs;
     wire [31:0] reg_rt;
     wire [31:0] write_data;
+    wire [27:0] shiftleft_adr =  {adr, 2'b00}; // shift left the address for jump instruction
+    wire zero_pc_increment;
+    alu pc_increment(
+        .a(PC_out),
+        .b(32'd4),
+        .alu_op(4'b0000),
+        .result(PC_in),
+        .zero(zero_pc_increment)
+    );
+    
+
+
     
     reg_file rf(
         .clk(clk),
@@ -132,6 +149,7 @@ module top(
     wire [31:0] alu_data_result;
 
     wire [31:0] immediate_extended = {{16{imm[15]}}, imm}; // sign-extend the immediate value
+    
     assign alu_data_in1 = reg_rs; // first operand for ALU
     assign alu_data_in2 = (immReg) ? immediate_extended : reg_rt; // second operand for ALU
     
@@ -147,6 +165,17 @@ module top(
         .zero(zero)
     );
 
+    wire [31:0] jump_addr = {PC_in[31:28], shiftleft_adr}; // concatenate the upper bits of PC with the shifted address
+
+
+    wire [31:0] extended_imm = {{14{imm[15]}}, imm, 2'b00}; // sign-extend the immediate value and shift left by 2 bits for branch instruction
+    wire [31:0] branch_addr = PC_in + extended_imm; // calculate the branch address
+
+    wire branch_taken = zero && branch; // check if the branch is taken based on the zero flag and regwrite signal
+    
+    wire [31:0] next_pc = (branch_taken) ? branch_addr : ((jump) ? jump_addr : PC_in); // choose the next PC based on branch and jump signals
+    assign PC_final = next_pc; // update PC_in with the calculated next_pc
+
     wire [31:0] data_memory_output;
     data_memory mem(
         .clk(clk),
@@ -159,16 +188,9 @@ module top(
     assign dummy_wire = 32'd0;
     assign outwire = write_data;
 
-    wire zero_pc_increment;
+    
 
-    alu pc_increment(
-        .a(PC_out),
-        .b(32'd4),
-        .alu_op(4'b0000),
-        .result(PC_in),
-        .zero(zero_pc_increment)
-    );
-
+    
 endmodule
 
 
