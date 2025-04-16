@@ -144,7 +144,7 @@ module instruction_decode (
         aluOp = 4'b0000; // add (for address calculation)
         immReg = 1'b1;
         regDst = 1'b0;
-        $display("Performing sw for reg %d, %d to mem[reg %d + %d]", rt, rs, imm);
+        $display("Performing sw for reg %d, %d to mem[%d]", rt, rs, imm);
     end
     6'h04: begin // beq
         aluOp = 4'b0001; // sub (for comparison)
