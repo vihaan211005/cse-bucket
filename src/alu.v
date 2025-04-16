@@ -82,7 +82,11 @@ module alu (
       4'b0110:  result = floor_result;
       4'b0111:  result = floor_to_int_result;
       4'b1000:  result = {30'b0, float_compare_result};
-      4'b1001:  result = {30'b0, int_compare_result};
+      4'b1001: begin
+        result = {30'b0, int_compare_result};
+//        zero = (result == 0) ? 1'b1 : 1'b0;  
+//        $display("Int comparision of %d %d done with result %b", a, b, zero);
+      end
       default: result = 0;
     endcase
     zero = (result == 0) ? 1'b1 : 1'b0;

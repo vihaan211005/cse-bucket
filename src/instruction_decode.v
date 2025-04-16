@@ -120,7 +120,7 @@ module instruction_decode (
         memread = 1'b0;
         memwrite = 1'b0;
         aluOp=4'b1001; // Subtraction to check for equality
-        immReg=1'b1;
+        immReg=1'b0;
         regDst=1'b0;
         jump = 1'b0;
         branch = 1'b1;
