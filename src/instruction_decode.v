@@ -80,7 +80,7 @@ module instruction_decode (
         aluOp=4'b0000;
         immReg=1'b1;
         regDst=1'b0;
-        $display("Performing lw for reg %d, %d to reg %d", rs, imm, rd);
+        $display("Performing lw for reg %d, %d to reg %d", rs, imm, rt);
     end
     6'h2B: begin // store word
         regwrite = 1'b0;
@@ -89,7 +89,7 @@ module instruction_decode (
         aluOp=4'b0000;
         immReg=1'b1;
         regDst=1'b0;
-        $display("Performing sw for reg %d, %d to mem[reg %d + %d]", rd, rs, imm);
+        $display("Performing sw for reg %d, %d to mem[%d]", rt, imm, rs);
     end
     endcase
   end
