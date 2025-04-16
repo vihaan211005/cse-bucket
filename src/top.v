@@ -116,11 +116,16 @@ module top(
         .immReg(immReg),
         .regDst(regDst)
     );
-    wire [4:0] write_reg = (regDst) ? rd : rt; // choose the destination register based on regDst signal
+    
+    // Special handling for JAL instruction
+    wire is_jal = (opcode == 6'h03);
+    wire [4:0] write_reg = (is_jal) ? 5'd31 : ((regDst) ? rd : rt); // Choose destination register
+    
     wire [31:0] reg_rs;
     wire [31:0] reg_rt;
     wire [31:0] write_data;
-    wire [27:0] shiftleft_adr =  {adr, 2'b00}; // shift left the address for jump instruction
+    wire [27:0] shiftleft_adr = {adr, 2'b00}; // shift left the address for jump instruction
+    
     wire zero_pc_increment;
     alu pc_increment(
         .a(PC_out),
@@ -129,9 +134,6 @@ module top(
         .result(PC_in),
         .zero(zero_pc_increment)
     );
-    
-
-
     
     reg_file rf(
         .clk(clk),
@@ -144,19 +146,33 @@ module top(
         .reg_write(regwrite)
     );
 
+    // Handle different instruction types and their special cases
     wire [31:0] alu_data_in1; // for the ALU giving data to memory or registers
     wire [31:0] alu_data_in2;
     wire [31:0] alu_data_result;
 
+    // Special handling for different immediate formats
     wire [31:0] immediate_extended = {{16{imm[15]}}, imm}; // sign-extend the immediate value
+    wire [31:0] immediate_zextended = {16'b0, imm}; // zero-extend for logical operations
+    wire [31:0] immediate_lui = {imm, 16'b0}; // lui immediate (shift left 16 bits)
     
-    assign alu_data_in1 = reg_rs; // first operand for ALU
-    assign alu_data_in2 = (immReg) ? immediate_extended : reg_rt; // second operand for ALU
+    // Special handling for shift instructions
+    wire is_shift = (opcode == 6'b000000) && (funct == 6'h00 || funct == 6'h02); // SLL or SRL
+    wire is_lui = (opcode == 6'h0F); // LUI
     
+    // Immediate value selection based on instruction
+    wire [31:0] immediate_selected = (is_lui) ? immediate_lui : 
+                                    ((opcode == 6'h0C || opcode == 6'h0D) ? immediate_zextended : 
+                                                                          immediate_extended);
     
-
+    // For shift operations, use shamt as the second operand
+    wire [31:0] shamt_extended = {27'b0, shamt};
+    
+    assign alu_data_in1 = (is_shift) ? reg_rt : reg_rs; // For shifts, use rt as first operand
+    assign alu_data_in2 = (is_shift) ? shamt_extended : 
+                          (immReg) ? immediate_selected : reg_rt;
+    
     wire zero;
-
     alu alu_data(
         .a(alu_data_in1),
         .b(alu_data_in2),
@@ -167,14 +183,21 @@ module top(
 
     wire [31:0] jump_addr = {PC_in[31:28], shiftleft_adr}; // concatenate the upper bits of PC with the shifted address
 
-
+    // Branch handling
     wire [31:0] extended_imm = {{14{imm[15]}}, imm, 2'b00}; // sign-extend the immediate value and shift left by 2 bits for branch instruction
     wire [31:0] branch_addr = PC_in + extended_imm; // calculate the branch address
 
-    wire branch_taken = zero && branch; // check if the branch is taken based on the zero flag and regwrite signal
+    // Check branch condition: for beq use zero, for bne use !zero
+    wire is_bne = (opcode == 6'h05);
+    wire branch_condition = is_bne ? !zero : zero;
+    wire branch_taken = branch_condition && branch; // Check if branch condition is met
     
-    wire [31:0] next_pc = (branch_taken) ? branch_addr : ((jump) ? jump_addr : PC_in); // choose the next PC based on branch and jump signals
-    assign PC_final = next_pc; // update PC_in with the calculated next_pc
+    // JAL handling - store PC+4 for return
+    wire [31:0] jal_data = PC_in;
+    
+    // PC update logic
+    wire [31:0] next_pc = (branch_taken) ? branch_addr : ((jump) ? jump_addr : PC_in);
+    assign PC_final = next_pc;
 
     wire [31:0] data_memory_output;
     data_memory mem(
@@ -184,13 +207,13 @@ module top(
         .write_data(reg_rt),
         .read_data(data_memory_output)
     );
-    assign write_data = (memread) ? data_memory_output : alu_data_result; // choose between ALU result and memory data
+    
+    // Choose the data to write to register
+    wire [31:0] alu_or_mem = (memread) ? data_memory_output : alu_data_result;
+    assign write_data = (is_jal) ? jal_data : alu_or_mem;
+    
     assign dummy_wire = 32'd0;
     assign outwire = write_data;
-
-    
-
-    
 endmodule
 
 
@@ -235,4 +258,4 @@ endmodule
 //module top_testbench()
 
 
- 
+
