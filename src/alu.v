@@ -41,6 +41,7 @@ module alu (
   wire [31:0] floor_result;
   wire [31:0] floor_to_int_result;
   wire [1:0] float_compare_result;
+  wire [1:0] int_compare_result;
 
   float_multiplier fm (
       .a(a),
@@ -64,6 +65,12 @@ module alu (
       .result(float_compare_result)
   );
 
+  int_comparator ic (
+      .a(a),
+      .b(b),
+      .result(int_compare_result)
+  );
+
   always @(*) begin
     case (alu_op)
       4'b0000: result = add_result;
@@ -75,6 +82,7 @@ module alu (
       4'b0110:  result = floor_result;
       4'b0111:  result = floor_to_int_result;
       4'b1000:  result = {30'b0, float_compare_result};
+      4'b1001:  result = {30'b0, int_compare_result};
       default: result = 0;
     endcase
     zero = (result == 0) ? 1'b1 : 1'b0;
@@ -233,6 +241,25 @@ module floor_to_int_unit (
 
             result = int_part;
         end
+    end
+endmodule
+
+module int_comparator (
+    input  [31:0] a,
+    input  [31:0] b,
+    output reg [1:0] result
+);
+
+    wire [31:0] abs_a = a[31] ? (~a + 1) : a;
+    wire [31:0] abs_b = b[31] ? (~b + 1) : b;
+
+    always @(*) begin
+        if (abs_a < abs_b)
+            result = 2'b01;
+        else if (abs_a > abs_b)
+            result = 2'b10;
+        else
+            result = 2'b00;
     end
 endmodule
 
