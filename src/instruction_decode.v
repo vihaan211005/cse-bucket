@@ -113,7 +113,7 @@ module instruction_decode (
         regDst=1'b0;
         jump = 1'b0;
         branch = 1'b0;
-        $display("Performing sw for reg %d, %d to mem[reg %d + %d]", rt, rs, imm);
+        $display("Performing sw for reg %d, %d to mem[%d]", rt, rs, imm);
     end
     6'h04: begin // beq
         regwrite = 1'b0;

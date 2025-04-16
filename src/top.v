@@ -221,6 +221,7 @@ module top_testbench();
         
         // End simulation after some time
 //        #200;
+        $display("Register 1 contains, %d", dut.rf.regs[4'd1]);
         $display("Simulation completed");
         $finish;
     end
