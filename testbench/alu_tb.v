@@ -5,7 +5,6 @@ module alu_tb;
   reg  [31:0] b;
   reg  [ 3:0] alu_op;
   wire [31:0] result;
-
   alu uut (
       .a(a),
       .b(b),
@@ -15,11 +14,12 @@ module alu_tb;
 
   task test_case(input [31:0] op_a, input [31:0] op_b, input [3:0] op, input [255:0] desc);
     begin
-      a = op_a;
-      b = op_b;
+      a      = op_a;
+      b      = op_b;
       alu_op = op;
       #10;
-      $display("Test: %-40s | a = %0d | b = %0d | alu_op = %b | result = %0d (hex: %h)", desc, a, b, alu_op, result, result);
+      $display("Test: %-40s | a = %0d | b = %0d | alu_op = %b | result = %0d (hex: %h)", desc, a,
+               b, alu_op, result, result);
     end
   endtask
 
@@ -79,6 +79,11 @@ module alu_tb;
     test_case(32'h40400000, 32'h40800000, 4'b1000, "compare(3.0, 4.0)");
     test_case(32'h40a00000, 32'h40800000, 4'b1000, "compare(5.0, 4.0)");
     test_case(32'h3f800000, 32'h3f800000, 4'b1000, "compare(1.0, 1.0)");
+
+    // OR
+    test_case(32'd10, 32'd20, 4'b1001, "OR: 10 | 20");
+    test_case(32'd0, 32'd0, 4'b1001, "OR: 0 | 0");
+    test_case(32'd4294967295, 32'd1, 4'b1001, "OR: INT_MAX | 1");
 
     $finish;
   end

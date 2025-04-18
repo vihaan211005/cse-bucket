@@ -1,20 +1,48 @@
 .data
 newline:            .asciiz "\n"
 
-p:                  .word   9
-array:              .float  0.1 0.1 0.8 0.3 0.5 0.69 0.42 0.7 0.99
-n:                  .word   1
-
 .text
                     .globl  main
 
 main:
-    la      $s0,                    p                                   # s0 = adr(p)
-    lw      $s0,                    0($s0)                              # s0 = p
-    la      $s1,                    n                                   # s1 = adr(n)
-    lw      $s6,                    0($s1)                              # s6 = n
-    la      $s2,                    array                               # s2 = adr(array)
+    ori $t0 $zero 1
+    j exit
 
+    li      $s0,                    9                                   # s0 = p
+    li      $s6,                    100                                 # s6 = n
+    # Allocate space on stack for 9 floats (9 * 4 bytes = 36 bytes)
+    addi    $sp,                    $sp,        -36                     # move stack pointer down
+
+    # Load float constants into FPU registers and store them to stack
+    li.s    $f0,                    0.1
+    s.s     $f0,                    0($sp)
+
+    li.s    $f0,                    0.1
+    s.s     $f0,                    4($sp)
+
+    li.s    $f0,                    0.8
+    s.s     $f0,                    8($sp)
+
+    li.s    $f0,                    0.3
+    s.s     $f0,                    12($sp)
+
+    li.s    $f0,                    0.5
+    s.s     $f0,                    16($sp)
+
+    li.s    $f0,                    0.69
+    s.s     $f0,                    20($sp)
+
+    li.s    $f0,                    0.42
+    s.s     $f0,                    24($sp)
+
+    li.s    $f0,                    0.7
+    s.s     $f0,                    28($sp)
+
+    li.s    $f0,                    0.99
+    s.s     $f0,                    32($sp)
+
+    move    $s2,                    $sp                                 # s2 = address of your float array in stack
+    
 make_buckets:
     # make n buckets
 
@@ -34,7 +62,7 @@ loop_buckets:
     mul     $t1,                    $t0,        4                       # t1 = i*4
     move    $t2,                    $s2                                 # t2 = adr(array)
     add     $t2,                    $t2,        $t1                     # t2 = adr(array[i])
-    l.s     $f1,                    0($s1)                              # f1 = n(int)
+    mtc1    $s6,                    $f1                                 # f1 = n(int)
     cvt.s.w $f1,                    $f1                                 # f1 = n(float)
     l.s     $f2,                    0($t2)                              # f2 = array[i]
     mul.s   $f2,                    $f2,        $f1                     # f2 = n * array[i]
@@ -56,7 +84,7 @@ fill_buckets_start:
     move    $s4,                    $sp                                 # s4 = adr of start of sorted array in buckets
     move    $t0,                    $s4                                 # t0 = adr of start of sorted array in buckets
     move    $t1,                    $s3                                 # t1 = adr of start of size buckets
-    lw      $t3,                    0($s1)                              # t3 = n
+    move    $t3,                    $s6                                 # t3 = n
     mul     $t3,                    $t3,        4                       # t3 = n*4
     sub     $sp,                    $s4,        $t3                     # sp = start of array of addresses
     move    $s5,                    $sp                                 # s5 = start of array of addresses
@@ -81,7 +109,7 @@ write_in_buckets_loop:
     mul     $t1,                    $t0,        4                       # t1 = i*4
     move    $t2,                    $s2                                 # t2 = adr(array)
     add     $t2,                    $t2,        $t1                     # t2 = adr(array[i])
-    l.s     $f1,                    0($s1)                              # f1 = n(int)
+    mtc1    $s6,                    $f1                                 # f1 = n(int)
     cvt.s.w $f1,                    $f1                                 # f1 = n(float)
     l.s     $f2,                    0($t2)                              # f2 = array[i]
     mul.s   $f2,                    $f2,        $f1                     # f2 =  n * array[i]
@@ -147,7 +175,8 @@ exit:
 sorter:
     li      $t1,                    1                                   # i = 1
 outer_loop:
-    bge     $t1,                    $s7,        end_sort                # if i >= n, exit
+    beq     $t1,                    $s7,        end_sort                # if i >= n, exit
+    beq     $s7,                    $zero,      end_sort                # if i >= n, exit
 
     mul     $t2,                    $t1,        4                       # offset = i * 4
     add     $t3,                    $a3,        $t2                     # address of array[i]

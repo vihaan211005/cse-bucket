@@ -11,7 +11,7 @@ module data_memory (
   dist_mem_gen_data data_mem (
       .a   (word_addr),
       .d   (write_data),
-      .dpra(8'b0),
+      .dpra(word_addr),
       .clk (clk),
       .we  (mem_write),
       .dpo (read_data)
